@@ -1,20 +1,33 @@
 # Secure Serverless Application Architecture on Google Cloud Platform
 
-## Project Overview
+### Cloud Run | Terraform | Cloud Armor WAF | Load Balancing | Cloud Monitoring
 
-This project demonstrates the deployment and security of a containerized serverless application on Google Cloud Platform (GCP).
+## 1. Project Overview
 
-The architecture integrates **Cloud Run, Artifact Registry, an External Application Load Balancer, Cloud Armor WAF, Cloud Logging, Cloud Monitoring, and Terraform** to build a scalable and security-focused cloud environment.
+This project demonstrates the implementation of a **secure, scalable, containerized serverless application architecture on Google Cloud Platform (GCP)**.
 
-The application runs on Cloud Run with restricted ingress, while an external HTTP load balancer provides the public entry point. Cloud Armor applies request-filtering rules, and Google Cloud's observability services provide logging, metrics, and alerting.
+The application is hosted on **Google Cloud Run**, with an **External Application Load Balancer** providing the public entry point. **Cloud Armor WAF** is attached to the load balancer backend to filter incoming requests.
 
-Terraform is used to manage the load-balancing and Cloud Armor infrastructure as code.
+**Terraform** is used to manage the networking and security infrastructure, while **Cloud Logging and Cloud Monitoring** provide request visibility, performance metrics, and alerting.
 
-## Architecture
+### Project Objectives
 
-![GCP Architecture](architecture/architecture.png)
+- Deploy a containerized application using Google Cloud Run.
+- Configure restricted Cloud Run ingress.
+- Route external HTTP requests through an Application Load Balancer.
+- Implement Cloud Armor WAF request filtering.
+- Provision and manage networking and security resources using Terraform.
+- Enable request logging and performance monitoring.
+- Configure an alerting policy for high request rates.
+- Validate infrastructure configuration and Terraform state.
 
-### Request Flow
+---
+
+## 2. Architecture Diagram
+
+![Secure Serverless GCP Architecture](architecture/architecture.png)
+
+### Application Request Flow
 
 ```text
 Internet Users
@@ -23,29 +36,28 @@ Internet Users
 External HTTP Application Load Balancer
       |
       v
-Cloud Armor WAF
+Backend Service + Cloud Armor WAF
       |
       v
-Backend Service
+Serverless Network Endpoint Group
       |
       v
-Serverless Network Endpoint Group (NEG)
-      |
-      v
-Cloud Run (secure-app)
+Google Cloud Run
       |
       v
 Containerized Application
 ```
 
-**Supporting services:**
+**Supporting Components**
 
-- Artifact Registry — stores the application container image.
-- Cloud Logging — collects application and load-balancer logs.
-- Cloud Monitoring — provides request metrics, latency charts, and alerting.
-- Terraform — manages the load balancer, serverless NEG, and Cloud Armor resources.
+- **Artifact Registry:** Stores the container image deployed to Cloud Run.
+- **Cloud Logging:** Collects Cloud Run and load balancer request logs.
+- **Cloud Monitoring:** Displays request metrics, latency, and alerting information.
+- **Terraform:** Manages the load balancer, serverless NEG, and Cloud Armor resources.
 
-## Technologies Used
+---
+
+## 3. Technologies Used
 
 | Category | Technologies |
 |---|---|
@@ -53,19 +65,19 @@ Containerized Application
 | Serverless Compute | Google Cloud Run |
 | Container Registry | Google Artifact Registry |
 | Networking | External Application Load Balancer, Serverless NEG |
-| Security | Google Cloud Armor WAF, IAM, Cloud Run Ingress Controls |
+| Security | Google Cloud Armor WAF, Cloud Run Ingress Controls |
 | Infrastructure as Code | Terraform |
 | Logging | Google Cloud Logging |
 | Monitoring | Google Cloud Monitoring |
-| Command Line | Google Cloud CLI, Cloud Shell |
+| CLI | Google Cloud CLI, Google Cloud Shell |
 
 ---
 
-# Implementation Workflow
+# 4. Implementation Workflow
 
-## Step 1: Configure the Google Cloud Project
+## Step 1: Configure Google Cloud Project
 
-Created a GCP project and configured Cloud Shell for infrastructure deployment.
+Created a Google Cloud project and configured the active project in Cloud Shell.
 
 **Project ID:** `secure-serverless-portfolio`
 
@@ -73,41 +85,47 @@ Created a GCP project and configured Cloud Shell for infrastructure deployment.
 gcloud config set project secure-serverless-portfolio
 ```
 
-Verified that billing was enabled for the project.
+Verified that billing was enabled.
 
-Enabled the required Google Cloud APIs for the application and supporting infrastructure.
+Enabled the required Google Cloud APIs:
 
 ```bash
 gcloud services enable run.googleapis.com
 gcloud services enable artifactregistry.googleapis.com
 gcloud services enable compute.googleapis.com
-gcloud services enable monitoring.googleapis.com
 gcloud services enable logging.googleapis.com
+gcloud services enable monitoring.googleapis.com
 ```
 
-## Step 2: Containerized Application and Artifact Registry
+These services provide the foundation for application hosting, networking, security, logging, and monitoring.
 
-The application was packaged as a container image and stored in Google Artifact Registry.
+---
 
-**Artifact Registry repository:** `secure-app-repo`
+## Step 2: Container Image and Artifact Registry
 
-**Container image:**
+The application container image was stored in Google Artifact Registry.
+
+**Repository:** `secure-app-repo`
+
+**Image:**
 
 ```text
 us-central1-docker.pkg.dev/secure-serverless-portfolio/secure-app-repo/secure-app:v1
 ```
 
-Artifact Registry provides a managed location for storing the container image used by Cloud Run.
+Artifact Registry provides managed storage for container images used by Cloud Run.
 
-## Step 3: Deploy the Application on Cloud Run
+---
 
-Deployed the container image to Google Cloud Run.
+## Step 3: Deploy the Application to Cloud Run
 
-**Deployment configuration:**
+Deployed the containerized application using Google Cloud Run.
 
-| Setting | Configuration |
+### Cloud Run Configuration
+
+| Property | Configuration |
 |---|---|
-| Service | secure-app |
+| Service Name | secure-app |
 | Region | us-central1 |
 | Container Port | 8080 |
 | Memory | 512 MiB |
@@ -116,20 +134,26 @@ Deployed the container image to Google Cloud Run.
 | Maximum Instances | 3 |
 | Ingress | Internal and Cloud Load Balancing |
 
-The ingress setting restricts direct public access to the Cloud Run service and allows requests through supported internal paths and Cloud Load Balancing.
+The ingress configuration restricts direct public access and permits supported requests through Cloud Load Balancing.
 
-Verified the deployed service using:
+### Verify Cloud Run Deployment
 
 ```bash
 gcloud run services describe secure-app \
   --region=us-central1
 ```
 
-## Step 4: Configure Terraform
+### Cloud Run Deployment Screenshot
 
-Terraform was used to provision and manage the load balancer and security resources.
+![Cloud Run Deployment](screenshots/01-cloud-run-service.png)
 
-Created the following Terraform configuration files:
+---
+
+## Step 4: Configure Infrastructure as Code Using Terraform
+
+Terraform was used to manage the load balancer and Cloud Armor infrastructure.
+
+### Terraform Configuration Files
 
 ```text
 terraform/
@@ -140,7 +164,7 @@ terraform/
 
 ### variables.tf
 
-Defined reusable variables for the Google Cloud project and region.
+Defines reusable project and region variables.
 
 ```hcl
 variable "project_id" {
@@ -157,7 +181,7 @@ variable "region" {
 
 ### provider.tf
 
-Configured the Google Cloud Terraform provider.
+Configures the Google Cloud Terraform provider.
 
 ```hcl
 terraform {
@@ -175,18 +199,26 @@ provider "google" {
 }
 ```
 
-The Terraform configuration manages six infrastructure resources.
+Terraform manages six resources in this project:
 
-## Step 5: Create the Cloud Armor WAF Policy
+1. Cloud Armor security policy.
+2. Serverless Network Endpoint Group.
+3. Backend service.
+4. URL map.
+5. HTTP target proxy.
+6. Global forwarding rule.
+
+---
+
+## Step 5: Implement Cloud Armor WAF Security
 
 Created a Cloud Armor security policy named `secure-app-waf`.
 
-The policy contains two rules:
+The policy contains a custom rule that blocks requests when the User-Agent header contains `BadBot`.
 
-1. Deny requests containing `BadBot` in the User-Agent header.
-2. Allow other requests through the default rule.
+All other requests are permitted by the default allow rule.
 
-**Terraform configuration:**
+### Terraform Configuration
 
 ```hcl
 resource "google_compute_security_policy" "waf_policy" {
@@ -222,13 +254,21 @@ resource "google_compute_security_policy" "waf_policy" {
 }
 ```
 
-The custom rule demonstrates application-layer request filtering. It is intended as a WAF demonstration rather than comprehensive bot protection.
+### Cloud Armor Security Rules
 
-## Step 6: Configure the Serverless Network Endpoint Group
+![Cloud Armor WAF Rules](screenshots/07-cloud-armor-waf-rules.png)
 
-Created a serverless Network Endpoint Group (NEG) to connect the load balancer backend to Cloud Run.
+This rule demonstrates application-layer request filtering. It is a demonstration rule rather than comprehensive bot protection.
 
-**Resource name:** `secure-app-neg`
+---
+
+## Step 6: Create a Serverless Network Endpoint Group
+
+Created a serverless Network Endpoint Group (NEG) to connect the load balancer backend to the Cloud Run service.
+
+**NEG Name:** `secure-app-neg`
+
+### Terraform Configuration
 
 ```hcl
 resource "google_compute_region_network_endpoint_group" "serverless_neg" {
@@ -242,15 +282,17 @@ resource "google_compute_region_network_endpoint_group" "serverless_neg" {
 }
 ```
 
-The serverless NEG acts as the connection between the load balancer backend and the Cloud Run service.
+The serverless NEG provides the integration between the load balancer backend and Cloud Run.
 
-## Step 7: Configure the Load Balancer Backend
+---
 
-Created the backend service and connected it to the serverless NEG.
+## Step 7: Configure the Load Balancer Backend Service
 
-**Backend service:** `secure-app-backend`
+Created a backend service named `secure-app-backend`.
 
-Attached the Cloud Armor WAF policy and enabled backend request logging.
+The backend service connects to the serverless NEG, attaches the Cloud Armor WAF policy, and enables request logging.
+
+### Terraform Configuration
 
 ```hcl
 resource "google_compute_backend_service" "backend" {
@@ -270,16 +312,25 @@ resource "google_compute_backend_service" "backend" {
 }
 ```
 
-**Configuration details:**
+### Verify Backend Configuration
 
-- Serverless NEG as the backend.
-- Cloud Armor security policy attached.
-- Backend request logging enabled.
-- Logging sample rate configured to 100%.
+```bash
+gcloud compute backend-services describe secure-app-backend \
+  --global \
+  --format="yaml(name,securityPolicy,backends,logConfig)"
+```
+
+The backend inspection confirmed the serverless NEG, attached Cloud Armor policy, and enabled request logging.
+
+### Backend Service and Logging Screenshot
+
+![Backend Logging Configuration](screenshots/06-backend-service-logging.png)
+
+---
 
 ## Step 8: Configure the External Application Load Balancer
 
-Configured a URL map, HTTP target proxy, and global forwarding rule.
+Configured an external HTTP Application Load Balancer using a URL map, HTTP target proxy, and global forwarding rule.
 
 ### URL Map
 
@@ -309,7 +360,7 @@ resource "google_compute_global_forwarding_rule" "frontend" {
 }
 ```
 
-### Load Balancer IP Output
+### Output the Public IP Address
 
 ```hcl
 output "load_balancer_ip" {
@@ -317,60 +368,38 @@ output "load_balancer_ip" {
 }
 ```
 
-The forwarding rule exposes the application through the external HTTP load balancer on port 80.
+The observed frontend IP during implementation was `136.82.172.80`.
 
-The observed frontend IP during implementation was:
+The load balancer uses HTTP on port 80.
 
-```text
-136.82.172.80
-```
-
-This address is a deployment-specific value and may change if the frontend resource is recreated.
-
-## Step 9: Verify Load Balancer and Security Resources
-
-Verified the created infrastructure using Google Cloud CLI.
-
-**Forwarding rule:**
+### Verify Load Balancer Resources
 
 ```bash
 gcloud compute forwarding-rules list --global
-```
 
-**Backend service:**
-
-```bash
 gcloud compute backend-services list --global
-```
 
-**Serverless NEG:**
-
-```bash
 gcloud compute network-endpoint-groups list \
   --regions=us-central1
-```
 
-**Cloud Armor policy:**
-
-```bash
 gcloud compute security-policies list
 ```
 
-**Backend logging and security policy attachment:**
+### Load Balancer and Cloud Armor Resources
 
-```bash
-gcloud compute backend-services describe secure-app-backend \
-  --global \
-  --format="yaml(name,securityPolicy,backends,logConfig)"
-```
+![Load Balancer Resources](screenshots/05-load-balancer-and-cloud-armor-resources.png)
 
-The resource inspection confirmed the backend service, serverless NEG, attached Cloud Armor policy, and enabled backend request logging.
+### URL Map Verification
 
-## Step 10: Test Application Access and WAF Filtering
+![URL Map Configuration](screenshots/08-url-map-and-logging.png)
 
-Used `curl` to test the load balancer endpoint and the Cloud Armor User-Agent filtering rule.
+---
 
-### Normal HTTP Request
+## Step 9: Test HTTP Requests and Cloud Armor Filtering
+
+Used `curl` to test requests through the load balancer frontend.
+
+### Test 1: Normal HTTP Request
 
 ```bash
 curl -sS -o /dev/null \
@@ -378,7 +407,13 @@ curl -sS -o /dev/null \
   http://136.82.172.80/
 ```
 
-### Request with Blocked User-Agent
+**Expected result:** The application responds successfully for a valid route, typically with HTTP 200.
+
+### Normal Request Screenshot
+
+![Normal HTTP Request](screenshots/09-normal-request.png)
+
+### Test 2: Blocked User-Agent Request
 
 ```bash
 curl -sS -A "BadBot" -o /dev/null \
@@ -386,22 +421,34 @@ curl -sS -A "BadBot" -o /dev/null \
   http://136.82.172.80/
 ```
 
-**Expected behavior:**
+**Expected result:** HTTP 403 Forbidden when the Cloud Armor rule matches.
 
-| Request | Expected Response |
+### Cloud Armor WAF Test Screenshot
+
+![Cloud Armor Blocked Request](screenshots/10-badbot-blocked.png)
+
+### Security Testing Summary
+
+| Test | Expected Behavior |
 |---|---|
-| Normal request | Application response, typically HTTP 200 for a valid route |
+| Normal request | Application response for a valid route |
 | BadBot User-Agent | HTTP 403 Forbidden |
 
-The Cloud Armor policy is configured to deny matching requests. Actual HTTP responses should be confirmed from the terminal test results.
+The actual HTTP status codes should be verified from the terminal outputs before treating these expected results as confirmed outcomes.
 
-## Step 11: Configure Cloud Logging and Monitoring
+---
 
-Enabled Cloud Logging and Cloud Monitoring APIs to support observability.
+## Step 10: Enable Cloud Logging
 
-### Cloud Logging
+Enabled Cloud Logging to inspect application requests and responses.
 
-Used Cloud Run service logs to inspect incoming requests and application responses.
+### Enable Logging API
+
+```bash
+gcloud services enable logging.googleapis.com
+```
+
+### Read Cloud Run Logs
 
 ```bash
 gcloud run services logs read secure-app \
@@ -409,23 +456,59 @@ gcloud run services logs read secure-app \
   --limit=30
 ```
 
-Observed successful HTTP 200 responses as well as HTTP 404 and 405 responses for other requested paths or methods.
+The Cloud Run logs included successful HTTP 200 requests and HTTP 404/405 responses for other paths or methods.
 
-### Cloud Monitoring Dashboard
+Backend request logging was also enabled with a sample rate of 1.0.
 
-Created a Cloud Monitoring dashboard with three charts:
+### Logging and Monitoring APIs
 
-1. **Cloud Run Request Count** — tracks incoming requests to `secure-app`.
-2. **Cloud Run Request Latency** — tracks request latency for the service.
-3. **Load Balancer Backend Request Count** — displays the backend request count metric.
+![Logging and Monitoring APIs](screenshots/04-monitoring-logging-apis.png)
 
-The Cloud Run charts were filtered to the `secure-app` service. The load balancer chart used the available backend request metric without a verified backend-specific filter.
+---
 
-### Alerting Policy
+## Step 11: Create Cloud Monitoring Dashboard
 
-Created and enabled an alerting policy.
+Created a Cloud Monitoring dashboard to visualize application traffic and performance.
 
-| Setting | Value |
+### Dashboard Metrics
+
+**1. Cloud Run Request Count**
+
+Tracks the number of requests received by the Cloud Run service.
+
+Filter:
+
+```text
+service_name = secure-app
+```
+
+**2. Cloud Run Request Latency**
+
+Tracks request latency for the Cloud Run service.
+
+Filter:
+
+```text
+service_name = secure-app
+```
+
+**3. Load Balancer Backend Request Count**
+
+Displays the available load balancer backend request count metric. The chart was not confirmed to have a backend-specific filter.
+
+### Cloud Monitoring Dashboard Screenshot
+
+![Cloud Monitoring Dashboard](screenshots/11-cloud-monitoring-dashboard.png)
+
+---
+
+## Step 12: Configure Cloud Monitoring Alerting
+
+Created an alerting policy to monitor high request rates.
+
+### Alert Configuration
+
+| Property | Value |
 |---|---|
 | Alert Name | Secure App - High Request Rate Alert |
 | Condition | Cloud Run High Request Rate |
@@ -434,19 +517,25 @@ Created and enabled an alerting policy.
 | Retest Window | 5 minutes |
 | Status | Enabled |
 
-The threshold was selected to demonstrate request-rate alerting.
+The threshold was configured for demonstrating alerting functionality.
 
-## Step 12: Validate the Terraform Infrastructure
+### Alerting Policy Screenshot
 
-Verified the Terraform installation and checked the managed infrastructure.
+![Cloud Monitoring Alert](screenshots/12-monitoring-alert-policy.png)
 
-### Terraform Version
+---
+
+## Step 13: Validate Terraform Infrastructure
+
+Validated the Terraform configuration and reviewed the managed infrastructure.
+
+### Check Terraform Version
 
 ```bash
 terraform version
 ```
 
-**Version used:** Terraform v1.7.5
+**Terraform version used:** 1.7.5
 
 ### Inspect Terraform State
 
@@ -454,7 +543,7 @@ terraform version
 terraform state list
 ```
 
-The state contained the following six resources:
+The state contained six managed resources:
 
 ```text
 google_compute_backend_service.backend
@@ -465,57 +554,43 @@ google_compute_target_http_proxy.http_proxy
 google_compute_url_map.url_map
 ```
 
-### Validate Configuration
+### Terraform State Screenshot
+
+![Terraform State](screenshots/13-terraform-version-and-state.png)
+
+### Validate Terraform Configuration
 
 ```bash
 terraform validate
 ```
 
-**Result:**
+**Observed result:**
 
 ```text
 Success! The configuration is valid.
 ```
 
-### Review Infrastructure Plan
+### Review Terraform Plan
 
 ```bash
 terraform plan
 ```
 
-The reviewed Terraform plan reported:
+**Observed result:**
 
 ```text
 No changes. Your infrastructure matches the configuration.
 ```
 
-This confirmed that the tracked infrastructure matched the Terraform configuration at the time of validation.
+This confirmed that the tracked infrastructure matched the Terraform configuration at the time of the plan.
+
+### Terraform Validation and Plan Screenshot
+
+![Terraform Validation and Plan](screenshots/14-terraform-validate-and-plan.png)
 
 ---
 
-## Project Screenshots
-
-Screenshots provide evidence of the deployed services, security configuration, monitoring, and Terraform validation.
-
-| Component | Screenshot |
-|---|---|
-| Cloud Run Service | `screenshots/01-cloud-run-service.png` |
-| Cloud Logging and Monitoring APIs | `screenshots/04-monitoring-logging-apis.png` |
-| Load Balancer and Cloud Armor Resources | `screenshots/05-load-balancer-and-cloud-armor-resources.png` |
-| Backend Logging Configuration | `screenshots/06-backend-service-logging.png` |
-| Cloud Armor WAF Rules | `screenshots/07-cloud-armor-waf-rules.png` |
-| URL Map and Logging | `screenshots/08-url-map-and-logging.png` |
-| Normal HTTP Request Test | `screenshots/09-normal-request.png` |
-| Cloud Armor BadBot Test | `screenshots/10-badbot-blocked.png` |
-| Cloud Monitoring Dashboard | `screenshots/11-cloud-monitoring-dashboard.png` |
-| Monitoring Alert Policy | `screenshots/12-monitoring-alert-policy.png` |
-| Terraform State | `screenshots/13-terraform-version-and-state.png` |
-| Terraform Validation and Plan | `screenshots/14-terraform-validate-and-plan.png` |
-
-
----
-
-## Repository Structure
+## 5. Repository Structure
 
 ```text
 secure-serverless-portfolio/
@@ -528,30 +603,49 @@ secure-serverless-portfolio/
 ├── terraform/
 │   ├── main.tf
 │   ├── provider.tf
-│   ├── variables.tf
-│   └── terraform.tfvars.example
+│   └── variables.tf
 │
 └── screenshots/
-    └── Project verification screenshots
+    ├── 01-cloud-run-service.png
+    ├── 04-monitoring-logging-apis.png
+    ├── 05-load-balancer-and-cloud-armor-resources.png
+    ├── 06-backend-service-logging.png
+    ├── 07-cloud-armor-waf-rules.png
+    ├── 08-url-map-and-logging.png
+    ├── 09-normal-request.png
+    ├── 10-badbot-blocked.png
+    ├── 11-cloud-monitoring-dashboard.png
+    ├── 12-monitoring-alert-policy.png
+    ├── 13-terraform-version-and-state.png
+    └── 14-terraform-validate-and-plan.png
 ```
 
-The Terraform configuration references an existing Cloud Run service. The Cloud Run deployment, container image, monitoring dashboard, and alert policy are not created by the six Terraform resources shown in this repository.
+**Note:** The Terraform configuration manages the load balancer, serverless NEG, and Cloud Armor resources. It references an existing Cloud Run service. The container image, Cloud Run service, monitoring dashboard, and alert policy are not provisioned by the six Terraform resources shown.
 
-## Key Learnings
+Terraform state files, local provider directories, and credentials should not be committed to the public repository.
 
-Through this project, I gained practical experience with:
+---
 
-- Deploying and configuring a containerized application using Google Cloud Run.
-- Restricting Cloud Run ingress and routing traffic through an external Application Load Balancer.
-- Connecting Cloud Run to a load balancer through a serverless NEG.
-- Creating and attaching Cloud Armor WAF security policies.
-- Managing GCP networking and security resources using Terraform.
-- Enabling request logging and analyzing Cloud Run service logs.
-- Creating Cloud Monitoring dashboards and alerting policies.
-- Validating Terraform configurations and reviewing infrastructure state.
+## 6. Key Learnings
 
-## Conclusion
+This project provided practical experience in:
 
-This project demonstrates the integration of serverless computing, cloud networking, application-layer security, infrastructure as code, and observability on Google Cloud Platform.
+- Deploying containerized applications on Google Cloud Run.
+- Configuring restricted ingress for serverless applications.
+- Implementing external HTTP load balancing with serverless backends.
+- Creating Cloud Armor WAF rules for application-layer request filtering.
+- Managing networking and security infrastructure with Terraform.
+- Enabling backend request logging and inspecting Cloud Run logs.
+- Building Cloud Monitoring dashboards for request count and latency.
+- Configuring Cloud Monitoring alerting policies.
+- Validating Terraform configuration and infrastructure state.
 
-By combining Cloud Run, an external Application Load Balancer, Cloud Armor, Terraform, Cloud Logging, and Cloud Monitoring, the project provides hands-on experience with the configuration and verification of a security-focused serverless architecture.
+---
+
+## 7. Conclusion
+
+This project demonstrates a security-focused serverless application architecture on Google Cloud Platform.
+
+It combines **Cloud Run, Artifact Registry, External Application Load Balancing, Cloud Armor WAF, Terraform, Cloud Logging, and Cloud Monitoring** to demonstrate serverless deployment, infrastructure automation, application-layer request filtering, and observability.
+
+The project strengthened my practical understanding of Google Cloud infrastructure, networking, security, and infrastructure as code.
