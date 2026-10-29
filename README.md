@@ -499,7 +499,7 @@ Backend request logging was also enabled through Terraform.
 ## Step 11: Create Cloud Monitoring Dashboard
 
 Created a custom Cloud Monitoring dashboard to visualize application request activity, latency, and load balancer metrics.
-
+![Cloud Monitoring Dashboard](screenshots/11-cloud-monitoring-dashboard.png)
 The dashboard contains three monitoring charts.
 
 ### Chart 1: Cloud Run Request Count
@@ -509,7 +509,7 @@ The dashboard contains three monitoring charts.
 **Filter:** `service_name = secure-app`
 
 This chart tracks the number of incoming requests handled by the Cloud Run application.
-
+![Cloud Monitoring Dashboard](Dashboard/Cloud_Run_Request_Count.png)
 It helps provide visibility into application traffic and request activity.
 
 ### Chart 2: Cloud Run Request Latency
@@ -519,7 +519,7 @@ It helps provide visibility into application traffic and request activity.
 **Filter:** `service_name = secure-app`
 
 This chart displays request latency for the Cloud Run application.
-
+![Cloud Monitoring Dashboard](Dashboard/Cloud_Run_Request_Latency.png)
 It helps analyze application response times and observe changes in request processing latency.
 
 ### Chart 3: Load Balancer Backend Request Count
@@ -527,25 +527,10 @@ It helps analyze application response times and observe changes in request proce
 **Metric:** Backend Request Count per Application Load Balancer
 
 This chart displays the available load balancer backend request count metric.
-
+![Cloud Monitoring Dashboard](Dashboard/Load_Balancer_Backend_Request_Count.png)
 The metric was added without a verified backend-specific filter.
 
-### Result: Cloud Monitoring Dashboard
 
-The following dashboard combines the three charts to provide visibility into application traffic and performance.
-
-![Cloud Monitoring Dashboard](screenshots/11-cloud-monitoring-dashboard.png)
-
-**Dashboard Components:**
-
-- Cloud Run Request Count
-![Cloud Monitoring Dashboard](screenshots/Cloud_Run_Request_Count.png)
-- Cloud Run Request Latency
-![Cloud Monitoring Dashboard](screenshots/Cloud_Run_Request_Latency.png)
-- Load Balancer Backend Request Count
-![Cloud Monitoring Dashboard](screenshots/Load_Balancer_Backend_Request_Count.png)
-
----
 
 ## Step 12: Configure Cloud Monitoring Alerting
 
