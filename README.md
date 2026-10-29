@@ -28,7 +28,7 @@ A **Cloud Armor Web Application Firewall (WAF)** policy provides request filteri
 
 ## 2. Architecture Diagram
 
-![Secure Serverless GCP Architecture](architecture/architecture.png)
+![Secure Serverless GCP Architecture](Architecture.drawio.png)
 
 ### Application Request Flow
 
