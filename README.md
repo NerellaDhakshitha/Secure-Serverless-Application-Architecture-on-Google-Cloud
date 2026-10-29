@@ -539,8 +539,11 @@ The following dashboard combines the three charts to provide visibility into app
 **Dashboard Components:**
 
 - Cloud Run Request Count
+![Cloud Monitoring Dashboard](screenshots/Cloud_Run_Request_Count.png)
 - Cloud Run Request Latency
+![Cloud Monitoring Dashboard](screenshots/Cloud_Run_Request_Latency.png)
 - Load Balancer Backend Request Count
+![Cloud Monitoring Dashboard](screenshots/Load_Balancer_Backend_Request_Count.png)
 
 ---
 
